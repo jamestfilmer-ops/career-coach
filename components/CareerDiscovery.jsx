@@ -1107,13 +1107,10 @@ function ChatView({ profile, apiKey, onReset }) {
   };
 
   const callApi = async (msgs) => {
-    const res = await fetch("https://api.anthropic.com/v1/messages", {
+    const res = await fetch("/api/chat", {
       method:"POST",
       headers:{
         "Content-Type":"application/json",
-        "x-api-key":apiKey,
-        "anthropic-version":"2023-06-01",
-        "anthropic-dangerous-direct-browser-access":"true",
       },
       body: JSON.stringify({
         model:"claude-sonnet-4-20250514",
@@ -1394,7 +1391,7 @@ export default function App() {
   };
 
   if (step === 0) return <StepWelcome onNext={next} hasProgress={(() => { try { return !!localStorage.getItem(STEP_KEY); } catch { return false; }})() } onResume={() => { try { const s = localStorage.getItem(STEP_KEY); if(s) setStep(parseInt(s,10)); } catch{} }} onReset={handleReset} />;
-  if (step === 8) return <ChatView profile={profile} apiKey={apiKey} onReset={handleReset} />;
+  if (step === 7) return <ChatView profile={profile} apiKey="" onReset={handleReset} />;
 
   return (
     <>
@@ -1404,7 +1401,7 @@ export default function App() {
       {step === 4 && <Step4 data={profile} onChange={u} onNext={next} onBack={back} />}
       {step === 5 && <Step5 data={profile} onChange={u} onNext={next} onBack={back} />}
       {step === 6 && <Step6 data={profile} onChange={u} onNext={next} onBack={back} />}
-      {step === 7 && <Step7 onSubmit={k => { setApiKey(k); next(); }} onBack={back} />}
+      
     </>
   );
 }
