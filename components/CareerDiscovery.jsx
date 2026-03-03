@@ -84,13 +84,21 @@ const DISC_OPTIONS = [
 ];
 
 const OCEAN_TRAITS = [
-  { key:"O", label:"Openness",          lo:"Practical / conventional", hi:"Creative / curious" },
-  { key:"C", label:"Conscientiousness", lo:"Spontaneous / flexible",   hi:"Organized / disciplined" },
-  { key:"E", label:"Extraversion",      lo:"Introverted / reserved",   hi:"Extroverted / energetic" },
-  { key:"A", label:"Agreeableness",     lo:"Skeptical / competitive",  hi:"Trusting / cooperative" },
-  { key:"N", label:"Neuroticism",       lo:"Calm / stable",            hi:"Sensitive / anxious" },
+  { key:"O", label:"Openness",          desc:"Curiosity, creativity, openness to new experiences" },
+  { key:"C", label:"Conscientiousness", desc:"Organization, discipline, goal-directedness" },
+  { key:"E", label:"Extraversion",      desc:"Sociability, energy, assertiveness" },
+  { key:"A", label:"Agreeableness",     desc:"Cooperation, trust, empathy" },
+  { key:"N", label:"Neuroticism",       desc:"Emotional sensitivity, anxiety, moodiness" },
 ];
-const OCEAN_LEVELS = ["Very Low","Low","Medium","High","Very High"];
+
+const HIGH5_STRENGTHS = [
+  "Achiever","Believer","Catalyst","Coach","Commander","Communicator",
+  "Competitor","Connector","Designer","Deliverer","Empathizer","Engager",
+  "Equalizer","Focus Expert","Forecaster","Ideator","Includer","Intuitor",
+  "Inventor","Motivator","Optimist","Organizer","Philomath","Pragmatist",
+  "Problem Solver","Relationship Master","Self-Believer","Strategist",
+  "Storyteller","Thinker","Time Keeper","Winner",
+];
 
 // ─── SYSTEM PROMPT ────────────────────────────────────────────────────────────
 const buildSystemPrompt = (p) => `
@@ -117,7 +125,8 @@ PERSONALITY:
 - Holland Code (top 3): ${p.holland?.join(", ") || "not taken"}
 - Enneagram: ${p.enneagram ? `${p.enneagram}${p.enneagramWing ? ` (${p.enneagramWing})` : ""} — ${ENNEAGRAM_LABELS[p.enneagram.replace(/w\\d/,"")] || ""}` : "not taken"}
 - Myers-Briggs: ${p.mbti || "not taken"}
-- OCEAN: O=${p.ocean?.O != null ? OCEAN_LEVELS[p.ocean.O] : "?"}, C=${p.ocean?.C != null ? OCEAN_LEVELS[p.ocean.C] : "?"}, E=${p.ocean?.E != null ? OCEAN_LEVELS[p.ocean.E] : "?"}, A=${p.ocean?.A != null ? OCEAN_LEVELS[p.ocean.A] : "?"}, N=${p.ocean?.N != null ? OCEAN_LEVELS[p.ocean.N] : "?"}
+- OCEAN percentiles: O=${p.ocean?.O ?? "?"}%, C=${p.ocean?.C ?? "?"}%, E=${p.ocean?.E ?? "?"}%, A=${p.ocean?.A ?? "?"}%, N=${p.ocean?.N ?? "?"}%
+- High5 strengths (top 5): ${p.high5?.join(", ") || "not taken"}
 ${p.extraContext ? `\nExtra context: ${p.extraContext}` : ""}
 
 YOUR OUTPUT MUST BE VALID JSON ONLY. No markdown, no preamble, no explanation outside the JSON. Return exactly this structure:
@@ -483,7 +492,7 @@ function StepWelcome({ onNext, hasProgress, onResume, onReset }) {
         {/* Time breakdown */}
         <div style={{ width:"100%", marginBottom:24, background:T.bg, border:`1px solid ${T.border}`, borderRadius:14, padding:"14px 16px" }}>
           <div style={{ fontFamily:"'Sora',sans-serif", fontSize:11, fontWeight:700, color:T.muted, textTransform:"uppercase", letterSpacing:"0.06em", marginBottom:10 }}>⏱ How long this takes</div>
-          {[["About you","~5 min"],["5 personality tests","~45–60 min (pause & come back)"],["Samuel's analysis","~2 min to generate"]].map(([label,time]) => (
+          {[["About you","~5 min"],["6 personality tests","~60–90 min (pause & come back)"],["Samuel's analysis","~2 min to generate"]].map(([label,time]) => (
             <div key={label} style={{ display:"flex", justifyContent:"space-between", alignItems:"baseline", marginBottom:5 }}>
               <span style={{ fontFamily:"'Sora',sans-serif", fontSize:13, color:T.text, fontWeight:500 }}>{label}</span>
               <span style={{ fontFamily:"'Sora',sans-serif", fontSize:12, color:T.muted }}>{time}</span>
@@ -514,6 +523,10 @@ function Step1({ data, onChange, onNext }) {
       <div style={{ marginBottom:18 }}>
         <label style={gs.label}>First name</label>
         <input style={gs.input} placeholder="Your name" value={data.name} onChange={e => onChange({ name:e.target.value })} />
+      </div>
+      <div style={{ marginBottom:18 }}>
+        <label style={gs.label}>Email <span style={{ fontWeight:400, textTransform:"none", letterSpacing:0 }}>(for your monthly Samuel check-in)</span></label>
+        <input type="email" style={gs.input} placeholder="you@email.com" value={data.email||""} onChange={e => onChange({ email:e.target.value })} />
       </div>
       <div style={{ marginBottom:18 }}>
         <label style={gs.label}>What are you studying?</label>
@@ -921,39 +934,30 @@ function OceanInput({ data, onChange }) {
   return (
     <div>
       <a href="https://www.truity.com/test/big-five-personality-test" target="_blank" rel="noopener noreferrer"
-        style={{
-          display:"flex", alignItems:"center", justifyContent:"space-between",
-          background:T.blue, borderRadius:12, padding:"14px 18px",
-          textDecoration:"none", marginBottom:16,
-          boxShadow:`0 4px 14px rgba(26,111,219,0.3)`,
-        }}>
+        style={{ display:"flex", alignItems:"center", justifyContent:"space-between", background:T.blue, borderRadius:12, padding:"14px 18px", textDecoration:"none", marginBottom:16, boxShadow:`0 4px 14px rgba(26,111,219,0.3)` }}>
         <div>
-          <div style={{ fontFamily:"'Sora',sans-serif", fontSize:14, fontWeight:700, color:T.white }}>
-            👉 Take the Big Five / OCEAN test first
-          </div>
-          <div style={{ fontFamily:"'Sora',sans-serif", fontSize:12, color:"rgba(255,255,255,0.8)", marginTop:2 }}>
-            truity.com/test/big-five-personality-test · free · ~10 min
-          </div>
+          <div style={{ fontFamily:"'Sora',sans-serif", fontSize:14, fontWeight:700, color:T.white }}>👉 Take the Big Five / OCEAN test first</div>
+          <div style={{ fontFamily:"'Sora',sans-serif", fontSize:12, color:"rgba(255,255,255,0.8)", marginTop:2 }}>truity.com/test/big-five-personality-test · free · ~10 min</div>
         </div>
         <span style={{ fontSize:20, color:T.white }}>↗</span>
       </a>
-      <p style={{ fontFamily:"'Sora',sans-serif", fontSize:13, color:T.muted, marginBottom:14, lineHeight:1.6 }}>
-        Come back and drag each slider to match what your results showed for each trait.
+      <p style={{ fontFamily:"'Sora',sans-serif", fontSize:13, color:T.muted, marginBottom:16, lineHeight:1.65 }}>
+        Truity gives you a <strong>percentile score (0–100)</strong> for each trait. Enter exactly what it shows — e.g. if it says "82nd percentile for Openness" enter 82.
       </p>
-      <div style={{ display:"flex", flexDirection:"column", gap:22 }}>
+      <div style={{ display:"grid", gridTemplateColumns:"1fr 1fr", gap:14 }}>
         {OCEAN_TRAITS.map(t => (
           <div key={t.key}>
-            <div style={{ display:"flex", justifyContent:"space-between", marginBottom:6 }}>
-              <span style={{ fontFamily:"'Sora',sans-serif", fontSize:14, fontWeight:700, color:T.text }}>{t.label}</span>
-              <span style={{ fontFamily:"'Sora',sans-serif", fontSize:13, color:T.blue, fontWeight:700 }}>
-                {OCEAN_LEVELS[ocean[t.key] ?? 2]}
-              </span>
-            </div>
-            <input type="range" min={0} max={4} value={ocean[t.key] ?? 2}
-              onChange={e => onChange({ ocean:{ ...ocean, [t.key]:Number(e.target.value) } })}
-              style={{ width:"100%", accentColor:T.blue, height:6 }} />
-            <div style={{ display:"flex", justifyContent:"space-between", fontFamily:"'Sora',sans-serif", fontSize:11, color:"#b8cce8", marginTop:4 }}>
-              <span>{t.lo}</span><span>{t.hi}</span>
+            <label style={{ ...gs.label, marginBottom:4 }}>{t.label}</label>
+            <p style={{ fontFamily:"'Sora',sans-serif", fontSize:11, color:"#94a3b8", marginBottom:6, lineHeight:1.4 }}>{t.desc}</p>
+            <div style={{ position:"relative" }}>
+              <input
+                style={{ ...gs.input, paddingRight:32 }}
+                placeholder="e.g. 74"
+                type="number" min={0} max={100}
+                value={ocean[t.key] ?? ""}
+                onChange={e => onChange({ ocean:{ ...ocean, [t.key]: e.target.value === "" ? undefined : Number(e.target.value) } })}
+              />
+              <span style={{ position:"absolute", right:12, top:"50%", transform:"translateY(-50%)", fontFamily:"'Sora',sans-serif", fontSize:12, color:T.muted }}>%</span>
             </div>
           </div>
         ))}
@@ -962,14 +966,93 @@ function OceanInput({ data, onChange }) {
   );
 }
 
+function High5Input({ data, onChange }) {
+  const selected = data.high5 || [];
+  const toggle = (v) => {
+    if (selected.includes(v)) onChange({ high5: selected.filter(x => x !== v) });
+    else if (selected.length < 5) onChange({ high5: [...selected, v] });
+  };
+  return (
+    <div>
+      <a href="https://high5test.com" target="_blank" rel="noopener noreferrer"
+        style={{ display:"flex", alignItems:"center", justifyContent:"space-between", background:T.blue, borderRadius:12, padding:"14px 18px", textDecoration:"none", marginBottom:16, boxShadow:`0 4px 14px rgba(26,111,219,0.3)` }}>
+        <div>
+          <div style={{ fontFamily:"'Sora',sans-serif", fontSize:14, fontWeight:700, color:T.white }}>👉 Take the High5 Strengths test first</div>
+          <div style={{ fontFamily:"'Sora',sans-serif", fontSize:12, color:"rgba(255,255,255,0.8)", marginTop:2 }}>high5test.com · free · ~15 min</div>
+        </div>
+        <span style={{ fontSize:20, color:T.white }}>↗</span>
+      </a>
+      <p style={{ fontFamily:"'Sora',sans-serif", fontSize:13, color:T.muted, marginBottom:14, lineHeight:1.65 }}>
+        High5 gives you your <strong>top 5 named strengths</strong>. Select the exact 5 it showed you — tap them in order, strongest first.
+      </p>
+      {selected.length > 0 && (
+        <div style={{ display:"flex", gap:6, flexWrap:"wrap", marginBottom:14 }}>
+          {selected.map((s, i) => (
+            <span key={s} style={{ fontFamily:"'Sora',sans-serif", fontSize:12, fontWeight:700, color:T.white, background:T.blue, borderRadius:20, padding:"3px 11px" }}>
+              {i+1}. {s}
+            </span>
+          ))}
+        </div>
+      )}
+      <div style={{ display:"flex", flexWrap:"wrap", gap:7 }}>
+        {HIGH5_STRENGTHS.map(s => {
+          const active = selected.includes(s);
+          const disabled = !active && selected.length >= 5;
+          return (
+            <button key={s} onClick={() => toggle(s)} disabled={disabled} style={{
+              padding:"7px 13px", borderRadius:20,
+              background: active ? T.blue : T.white,
+              border:`1.5px solid ${active ? T.blue : T.border}`,
+              fontFamily:"'Sora',sans-serif", fontSize:12, fontWeight: active ? 700 : 400,
+              color: active ? T.white : disabled ? "#cbd5e1" : T.muted,
+              cursor: disabled ? "not-allowed" : "pointer",
+              transition:"all 0.15s", opacity: disabled ? 0.5 : 1,
+            }}>{s}</button>
+          );
+        })}
+      </div>
+      {selected.length === 5 && (
+        <p style={{ fontFamily:"'Sora',sans-serif", fontSize:12, color:"#16a34a", fontWeight:600, marginTop:10 }}>
+          ✓ All 5 strengths selected
+        </p>
+      )}
+    </div>
+  );
+}
+
 function Step5({ data, onChange, onNext, onBack }) {
   const [subStep, setSubStep] = useState(0);
   const tests = [
-    { id:"disc",      title:"DISC Personality",    check: (d) => Object.keys(d.disc||{}).length === 4 && DISC_OPTIONS.every(o => (d.disc[o.key]||"").toString().trim() !== ""), component: <DiscInput data={data} onChange={onChange} /> },
-    { id:"holland",   title:"Holland Code",         check: (d) => (d.holland||[]).length >= 1,    component: <HollandInput data={data} onChange={onChange} /> },
-    { id:"enneagram", title:"Enneagram",            check: (d) => !!(d.enneagram && d.enneagram.replace(/w\d/,"") !== ""), component: <EnneagramInput data={data} onChange={onChange} /> },
-    { id:"mbti",      title:"Myers-Briggs (MBTI)",  check: (d) => !!(d.mbti && d.mbti.replace(/-(T|A)$/,"").length === 4), component: <MbtiInput data={data} onChange={onChange} /> },
-    { id:"ocean",     title:"Big Five (OCEAN)",     check: (d) => d.ocean && Object.keys(d.ocean).length === 5, component: <OceanInput data={data} onChange={onChange} /> },
+    {
+      id:"disc", title:"DISC",
+      check: (d) => Object.keys(d.disc||{}).length === 4 && DISC_OPTIONS.every(o => (d.disc[o.key]||"").toString().trim() !== ""),
+      component: <DiscInput data={data} onChange={onChange} />
+    },
+    {
+      id:"holland", title:"Holland Code",
+      check: (d) => (d.holland||[]).length >= 1,
+      component: <HollandInput data={data} onChange={onChange} />
+    },
+    {
+      id:"enneagram", title:"Enneagram",
+      check: (d) => !!(d.enneagram && d.enneagram.replace(/w\d/,"") !== ""),
+      component: <EnneagramInput data={data} onChange={onChange} />
+    },
+    {
+      id:"mbti", title:"Myers-Briggs",
+      check: (d) => !!(d.mbti && d.mbti.replace(/-(T|A)$/,"").length === 4),
+      component: <MbtiInput data={data} onChange={onChange} />
+    },
+    {
+      id:"ocean", title:"Big Five",
+      check: (d) => d.ocean && Object.values(d.ocean).filter(v => v !== undefined && v !== "").length === 5,
+      component: <OceanInput data={data} onChange={onChange} />
+    },
+    {
+      id:"high5", title:"High5",
+      check: (d) => (d.high5||[]).length === 5,
+      component: <High5Input data={data} onChange={onChange} />
+    },
   ];
 
   const current = tests[subStep];
@@ -1235,7 +1318,192 @@ function CareerCard({ job, saved, onSave }) {
   );
 }
 
-function CareerMap({ data, name, onReset }) {
+function CompareView({ allJobs, saved }) {
+  const [picks, setPicks] = useState([null, null]);
+  const [search, setSearch] = useState("");
+
+  const filtered = allJobs.filter(j =>
+    j.title.toLowerCase().includes(search.toLowerCase())
+  );
+
+  const pick = (job) => {
+    if (picks[0]?.title === job.title || picks[1]?.title === job.title) {
+      setPicks(picks.map(p => p?.title === job.title ? null : p));
+      return;
+    }
+    if (!picks[0]) { setPicks([job, picks[1]]); return; }
+    if (!picks[1]) { setPicks([picks[0], job]); return; }
+    setPicks([job, picks[1]]);
+  };
+
+  const [a, b] = picks;
+  const rows = [
+    { label:"Salary",      va: a?.salary,   vb: b?.salary },
+    { label:"Median",      va: a?.median,   vb: b?.median },
+    { label:"AI Risk",     va: a?.aiRisk,   vb: b?.aiRisk },
+    { label:"Remote",      va: a?.remote ? "Yes ✓" : "No", vb: b?.remote ? "Yes ✓" : "No" },
+    { label:"Degree",      va: a?.degree,   vb: b?.degree },
+    { label:"Path steps",  va: a?.path ? `${a.path.length} steps` : "—", vb: b?.path ? `${b.path.length} steps` : "—" },
+  ];
+
+  return (
+    <div style={{ padding:"14px", background:"#f8faff", flex:1, overflow:"auto" }}>
+      <p style={{ fontFamily:"'Sora',sans-serif", fontSize:12, color:T.muted, marginBottom:12, marginTop:0 }}>
+        Pick any two careers to compare side by side.
+      </p>
+
+      {/* Search + pick list */}
+      <input
+        style={{ ...gs.input, marginBottom:10 }}
+        placeholder="Search careers…"
+        value={search}
+        onChange={e => setSearch(e.target.value)}
+      />
+      <div style={{ display:"flex", flexWrap:"wrap", gap:6, marginBottom:20 }}>
+        {filtered.map(job => {
+          const picked = picks[0]?.title === job.title || picks[1]?.title === job.title;
+          const isA = picks[0]?.title === job.title;
+          return (
+            <button key={job.title} onClick={() => pick(job)} style={{
+              padding:"6px 12px", borderRadius:20,
+              background: picked ? (isA ? T.blue : "#7c3aed") : T.white,
+              border:`1.5px solid ${picked ? (isA ? T.blue : "#7c3aed") : T.border}`,
+              fontFamily:"'Sora',sans-serif", fontSize:12, fontWeight:600,
+              color: picked ? T.white : T.muted,
+              cursor:"pointer", transition:"all 0.15s",
+            }}>
+              {picked ? (isA ? "A: " : "B: ") : ""}{job.title}
+            </button>
+          );
+        })}
+      </div>
+
+      {/* Comparison table */}
+      {(a || b) && (
+        <div style={{ background:T.white, borderRadius:16, border:`1px solid ${T.border}`, overflow:"hidden" }}>
+          {/* Headers */}
+          <div style={{ display:"grid", gridTemplateColumns:"1fr 1fr 1fr", borderBottom:`1px solid ${T.border}` }}>
+            <div style={{ padding:"12px 14px", fontFamily:"'Sora',sans-serif", fontSize:11, fontWeight:700, color:T.muted, textTransform:"uppercase", letterSpacing:"0.06em" }}></div>
+            <div style={{ padding:"12px 14px", background:T.blueLight, fontFamily:"'Sora',sans-serif", fontSize:13, fontWeight:700, color:T.blue, borderLeft:`1px solid ${T.border}` }}>
+              {a ? a.title : <span style={{ color:T.muted, fontWeight:400 }}>Pick A</span>}
+            </div>
+            <div style={{ padding:"12px 14px", background:"#f5f0ff", fontFamily:"'Sora',sans-serif", fontSize:13, fontWeight:700, color:"#7c3aed", borderLeft:`1px solid ${T.border}` }}>
+              {b ? b.title : <span style={{ color:T.muted, fontWeight:400 }}>Pick B</span>}
+            </div>
+          </div>
+          {rows.map((row, i) => (
+            <div key={row.label} style={{ display:"grid", gridTemplateColumns:"1fr 1fr 1fr", borderBottom: i < rows.length-1 ? `1px solid ${T.border}` : "none" }}>
+              <div style={{ padding:"10px 14px", fontFamily:"'Sora',sans-serif", fontSize:12, fontWeight:600, color:T.muted }}>{row.label}</div>
+              <div style={{ padding:"10px 14px", fontFamily:"'Sora',sans-serif", fontSize:13, color:T.text, borderLeft:`1px solid ${T.border}` }}>{row.va || "—"}</div>
+              <div style={{ padding:"10px 14px", fontFamily:"'Sora',sans-serif", fontSize:13, color:T.text, borderLeft:`1px solid ${T.border}` }}>{row.vb || "—"}</div>
+            </div>
+          ))}
+        </div>
+      )}
+    </div>
+  );
+}
+
+function CoffeeChatTracker() {
+  const [chats, setChats] = useState(() => {
+    try { return JSON.parse(localStorage.getItem("samuel_chats") || "[]"); } catch { return []; }
+  });
+  const [form, setForm] = useState({ name:"", field:"", date:"", note:"" });
+  const [adding, setAdding] = useState(false);
+
+  const save = () => {
+    if (!form.name.trim() || !form.field.trim()) return;
+    const next = [{ ...form, id: Date.now() }, ...chats];
+    setChats(next);
+    try { localStorage.setItem("samuel_chats", JSON.stringify(next)); } catch {}
+    setForm({ name:"", field:"", date:"", note:"" });
+    setAdding(false);
+  };
+
+  const remove = (id) => {
+    const next = chats.filter(c => c.id !== id);
+    setChats(next);
+    try { localStorage.setItem("samuel_chats", JSON.stringify(next)); } catch {}
+  };
+
+  return (
+    <div style={{ flex:1, overflow:"auto", padding:"14px", background:"#f8faff" }}>
+      {/* Header row */}
+      <div style={{ display:"flex", justifyContent:"space-between", alignItems:"center", marginBottom:14 }}>
+        <div>
+          <p style={{ fontFamily:"'Sora',sans-serif", fontSize:12, color:T.muted, margin:0 }}>
+            {chats.length === 0 ? "No chats logged yet — every conversation counts." : `${chats.length} coffee chat${chats.length !== 1 ? "s" : ""} logged 🎉`}
+          </p>
+        </div>
+        <button onClick={() => setAdding(a => !a)} style={{
+          padding:"8px 14px", background:adding ? T.white : T.blue, border:`1.5px solid ${adding ? T.border : T.blue}`,
+          borderRadius:10, fontFamily:"'Sora',sans-serif", fontSize:12, fontWeight:700,
+          color: adding ? T.muted : T.white, cursor:"pointer", transition:"all 0.15s",
+        }}>
+          {adding ? "Cancel" : "+ Log a chat"}
+        </button>
+      </div>
+
+      {/* Add form */}
+      {adding && (
+        <div style={{ background:T.white, border:`1.5px solid ${T.blue}`, borderRadius:16, padding:"16px", marginBottom:16 }}>
+          <div style={{ display:"grid", gridTemplateColumns:"1fr 1fr", gap:10, marginBottom:10 }}>
+            <div>
+              <label style={{ ...gs.label, marginBottom:4 }}>Their name</label>
+              <input style={gs.input} placeholder="e.g. Sarah Chen" value={form.name} onChange={e => setForm(f => ({...f, name:e.target.value}))} />
+            </div>
+            <div>
+              <label style={{ ...gs.label, marginBottom:4 }}>Career field</label>
+              <input style={gs.input} placeholder="e.g. UX Research" value={form.field} onChange={e => setForm(f => ({...f, field:e.target.value}))} />
+            </div>
+          </div>
+          <div style={{ marginBottom:10 }}>
+            <label style={{ ...gs.label, marginBottom:4 }}>Date</label>
+            <input type="date" style={gs.input} value={form.date} onChange={e => setForm(f => ({...f, date:e.target.value}))} />
+          </div>
+          <div style={{ marginBottom:14 }}>
+            <label style={{ ...gs.label, marginBottom:4 }}>How did it go? <span style={{ fontWeight:400, textTransform:"none", letterSpacing:0 }}>(optional)</span></label>
+            <textarea style={{ ...gs.input, height:72, resize:"vertical", lineHeight:1.6 }}
+              placeholder="What did you learn? Did anything surprise you?"
+              value={form.note} onChange={e => setForm(f => ({...f, note:e.target.value}))} />
+          </div>
+          <button onClick={save} style={{
+            width:"100%", padding:"11px", background:T.blue, border:"none", borderRadius:10,
+            fontFamily:"'Sora',sans-serif", fontSize:14, fontWeight:700, color:T.white, cursor:"pointer",
+          }}>Save chat</button>
+        </div>
+      )}
+
+      {/* Chat list */}
+      {chats.length === 0 && !adding && (
+        <div style={{ textAlign:"center", padding:"40px 0" }}>
+          <div style={{ fontSize:32, marginBottom:12 }}>☕</div>
+          <div style={{ fontFamily:"'Sora',sans-serif", fontSize:14, color:T.muted, lineHeight:1.7 }}>
+            Log your first coffee chat.<br/>Even one conversation can change everything.
+          </div>
+        </div>
+      )}
+
+      {chats.map(chat => (
+        <div key={chat.id} style={{ background:T.white, border:`1px solid ${T.border}`, borderRadius:14, padding:"14px 16px", marginBottom:10 }}>
+          <div style={{ display:"flex", justifyContent:"space-between", alignItems:"flex-start", marginBottom:4 }}>
+            <div>
+              <div style={{ fontFamily:"'Sora',sans-serif", fontSize:14, fontWeight:700, color:T.text }}>{chat.name}</div>
+              <div style={{ display:"flex", gap:8, marginTop:4 }}>
+                <span style={{ fontFamily:"'Sora',sans-serif", fontSize:12, color:T.blue, background:T.blueLight, borderRadius:20, padding:"2px 9px", fontWeight:600 }}>{chat.field}</span>
+                {chat.date && <span style={{ fontFamily:"'Sora',sans-serif", fontSize:12, color:T.muted }}>{new Date(chat.date).toLocaleDateString("en-US", { month:"short", day:"numeric", year:"numeric" })}</span>}
+              </div>
+            </div>
+            <button onClick={() => remove(chat.id)} style={{ background:"none", border:"none", cursor:"pointer", color:"#cbd5e1", fontSize:16, padding:"2px 4px" }}>×</button>
+          </div>
+          {chat.note && <p style={{ fontFamily:"'Sora',sans-serif", fontSize:13, color:T.muted, lineHeight:1.65, margin:"8px 0 0" }}>{chat.note}</p>}
+        </div>
+      ))}
+    </div>
+  );
+}
+
+function CareerMap({ data, name, email, onReset }) {
   const [tab, setTab] = useState(0);
   const [saved, setSaved] = useState(() => {
     try { return JSON.parse(localStorage.getItem("samuel_saved") || "[]"); } catch { return []; }
@@ -1245,16 +1513,35 @@ function CareerMap({ data, name, onReset }) {
     const next = saved.includes(title) ? saved.filter(t => t !== title) : [...saved, title];
     setSaved(next);
     try { localStorage.setItem("samuel_saved", JSON.stringify(next)); } catch {}
+    // Register email for monthly check-in on first save
+    if (email && !saved.length) {
+      fetch("/api/register-checkin", {
+        method:"POST",
+        headers:{ "Content-Type":"application/json" },
+        body: JSON.stringify({ email, name, savedCareers: next }),
+      }).catch(() => {});
+    }
   };
 
   const allJobs = [...(data.tier1||[]),...(data.tier2||[]),...(data.tier3||[])];
   const tabs = [
-    { label:"🎯 Your Lane",   jobs: data.tier1||[], desc:"Careers you'd genuinely thrive in" },
-    { label:"🔭 Explore",     jobs: data.tier2||[], desc:"Worth a closer look with a small pivot" },
-    { label:"🃏 Wild Cards",  jobs: data.tier3||[], desc:"Surprising fits most people never consider" },
-    ...(saved.length > 0 ? [{ label:`★ Saved (${saved.length})`, jobs: allJobs.filter(j => saved.includes(j.title)), desc:"Your shortlist" }] : []),
+    { label:"🎯 Your Lane",   key:"lane" },
+    { label:"🔭 Explore",     key:"explore" },
+    { label:"🃏 Wild Cards",  key:"wild" },
+    { label:"★ Saved" + (saved.length ? ` (${saved.length})` : ""), key:"saved" },
+    { label:"⚖️ Compare",     key:"compare" },
+    { label:"☕ Chats",       key:"chats" },
   ];
   const current = tabs[Math.min(tab, tabs.length-1)];
+
+  const jobsForTab = () => {
+    if (current.key === "lane")    return { jobs: data.tier1||[], desc:"Careers you'd genuinely thrive in" };
+    if (current.key === "explore") return { jobs: data.tier2||[], desc:"Worth a closer look with a small pivot" };
+    if (current.key === "wild")    return { jobs: data.tier3||[], desc:"Surprising fits most people never consider" };
+    if (current.key === "saved")   return { jobs: allJobs.filter(j => saved.includes(j.title)), desc:"Your shortlist" };
+    return null;
+  };
+  const jobTab = jobsForTab();
 
   return (
     <div style={{ height:"100%", display:"flex", flexDirection:"column" }}>
@@ -1279,7 +1566,7 @@ function CareerMap({ data, name, onReset }) {
       <div style={{ display:"flex", borderBottom:`1px solid ${T.border}`, flexShrink:0, background:T.white, overflowX:"auto" }}>
         {tabs.map((t, i) => (
           <button key={i} onClick={() => setTab(i)} style={{
-            padding:"11px 18px", fontFamily:"'Sora',sans-serif", fontSize:12, fontWeight:700,
+            padding:"10px 14px", fontFamily:"'Sora',sans-serif", fontSize:11, fontWeight:700,
             color: tab===i ? T.blue : T.muted,
             background: tab===i ? T.white : "#fafbff",
             border:"none", borderBottom:`2.5px solid ${tab===i ? T.blue : "transparent"}`,
@@ -1288,23 +1575,27 @@ function CareerMap({ data, name, onReset }) {
         ))}
       </div>
 
-      {/* Cards */}
-      <div style={{ flex:1, overflow:"auto", padding:"14px 14px 14px", background:"#f8faff" }}>
-        <p style={{ fontFamily:"'Sora',sans-serif", fontSize:12, color:T.muted, marginBottom:12, marginTop:0 }}>
-          {current.desc} · <strong style={{ color:T.text }}>{current.jobs.length} careers</strong>
-        </p>
-        {current.jobs.map((job, i) => (
-          <CareerCard key={`${job.title}-${i}`} job={job} saved={saved.includes(job.title)} onSave={toggleSave} />
-        ))}
-        {current.jobs.length === 0 && (
-          <div style={{ textAlign:"center", padding:"48px 0", fontFamily:"'Sora',sans-serif", fontSize:14, color:T.muted }}>
-            {tab === 3 ? "Tap ☆ on any career to save it here" : "No careers in this tier"}
-          </div>
-        )}
-      </div>
+      {/* Content */}
+      {current.key === "compare" && <CompareView allJobs={allJobs} saved={saved} />}
+      {current.key === "chats"   && <CoffeeChatTracker />}
+      {jobTab && (
+        <div style={{ flex:1, overflow:"auto", padding:"14px", background:"#f8faff" }}>
+          <p style={{ fontFamily:"'Sora',sans-serif", fontSize:12, color:T.muted, marginBottom:12, marginTop:0 }}>
+            {jobTab.desc} · <strong style={{ color:T.text }}>{jobTab.jobs.length} careers</strong>
+          </p>
+          {jobTab.jobs.map((job, i) => (
+            <CareerCard key={`${job.title}-${i}`} job={job} saved={saved.includes(job.title)} onSave={toggleSave} />
+          ))}
+          {jobTab.jobs.length === 0 && (
+            <div style={{ textAlign:"center", padding:"48px 0", fontFamily:"'Sora',sans-serif", fontSize:14, color:T.muted }}>
+              {current.key === "saved" ? "Tap ☆ on any career to save it here" : "No careers in this tier"}
+            </div>
+          )}
+        </div>
+      )}
 
       {/* Next move */}
-      {data.nextMove && (
+      {data.nextMove && current.key !== "compare" && current.key !== "chats" && (
         <div style={{ padding:"14px 16px", background:T.blue, flexShrink:0 }}>
           <div style={{ fontFamily:"'Sora',sans-serif", fontSize:10, fontWeight:700, color:"rgba(255,255,255,0.65)", textTransform:"uppercase", letterSpacing:"0.07em", marginBottom:6 }}>⚡ Your move this week</div>
           <p style={{ fontFamily:"'Sora',sans-serif", fontSize:13, color:T.white, lineHeight:1.75, margin:0 }}>{data.nextMove}</p>
@@ -1326,9 +1617,6 @@ function ChatView({ profile, onReset }) {
   const kickoff = async () => {
     setLoading(true);
     setError("");
-    const oceanDesc = profile.ocean
-      ? Object.entries(profile.ocean).map(([k,v]) => `${k}=${OCEAN_LEVELS[v]}`).join(", ")
-      : "not set";
     const discDesc = profile.disc
       ? Object.entries(profile.disc).map(([k,v]) => `${k}=${v}%`).join(", ")
       : "not taken";
@@ -1344,7 +1632,8 @@ Work: ${profile.workTypes?.join(", ")||"none"} — ${profile.workDetails||""}
 Career ideas: ${profile.dreamJob||"no idea"}
 DISC: ${discDesc} | Holland: ${profile.holland?.join(", ")||"not taken"}
 Enneagram: ${profile.enneagram||"not taken"}${profile.enneagramWing ? ` (${profile.enneagramWing})` : ""} | MBTI: ${profile.mbti||"not taken"}
-OCEAN: ${oceanDesc}
+OCEAN percentiles: O=${profile.ocean?.O??`?`}%, C=${profile.ocean?.C??`?`}%, E=${profile.ocean?.E??`?`}%, A=${profile.ocean?.A??`?`}%, N=${profile.ocean?.N??`?`}%
+High5 strengths: ${profile.high5?.join(", ")||"not taken"}
 ${profile.extraContext ? `Extra: ${profile.extraContext}` : ""}`;
 
     try {
@@ -1399,7 +1688,7 @@ ${profile.extraContext ? `Extra: ${profile.extraContext}` : ""}`;
         )}
 
         {careerMap && !loading && (
-          <CareerMap data={careerMap} name={profile.name} onReset={onReset} />
+          <CareerMap data={careerMap} name={profile.name} email={profile.email} onReset={onReset} />
         )}
       </div>
     </div>
@@ -1411,12 +1700,12 @@ const STORAGE_KEY = "samuel_profile_v1";
 const STEP_KEY    = "samuel_step_v1";
 
 const DEFAULT_PROFILE = {
-  name:"", major:"History",
+  name:"", email:"", major:"History",
   interests:[], hobbies:[], hyperfixation:"",
   books:"", movies:"", games:"",
   strengths:[], dreamJob:"",
   workTypes:[], workDetails:"",
-  disc:{}, holland:[], enneagram:"", enneagramWing:"", mbti:"", ocean:{},
+  disc:{}, holland:[], enneagram:"", enneagramWing:"", mbti:"", ocean:{}, high5:[],
   extraContext:"",
 };
 
