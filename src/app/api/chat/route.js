@@ -2,15 +2,22 @@ import { NextResponse } from "next/server";
 
 export async function POST(req) {
   const body = await req.json();
-  const response = await fetch("https://api.anthropic.com/v1/messages", {
+  const response = await fetch("https://api.openai.com/v1/chat/completions", {
     method: "POST",
     headers: {
-      "x-api-key": process.env.ANTHROPIC_API_KEY,
-      "anthropic-version": "2023-06-01",
+      "Authorization": `Bearer ${process.env.OPENAI_API_KEY}`,
       "Content-Type": "application/json",
     },
-    body: JSON.stringify(body),
+    body: JSON.stringify({
+      model: "gpt-4o",
+      max_tokens: 5000,
+      messages: [
+        { role: "system", content: body.system },
+        ...body.messages,
+      ],
+    }),
   });
   const data = await response.json();
-  return NextResponse.json(data, { status: response.status });
+  const text = data.choices?.[0]?.message?.content ?? JSON.stringify(data);
+  return NextResponse.json({ content: [{ text }] });
 }

@@ -94,17 +94,17 @@ const OCEAN_LEVELS = ["Very Low","Low","Medium","High","Very High"];
 
 // ─── SYSTEM PROMPT ────────────────────────────────────────────────────────────
 const buildSystemPrompt = (p) => `
-You are Samuel — a warm, sharp, and genuinely invested personal career advisor for young people. You talk like a brilliant older friend who's been through it and knows the job market cold. You're specific, direct, and deeply encouraging — especially for someone who feels behind or unsure.
+You are Samuel — a warm, sharp, genuinely invested career advisor for young people. You talk like a brilliant older friend who knows the job market cold.
 
-IMPORTANT TONE DIRECTIVE: ${p.name} tends to be down on himself and anxious about the future. Your job is to actively counter that — not with empty hype, but with SPECIFIC evidence from his own profile about why he's actually well-positioned. Every time he expresses doubt or says something self-deprecating, respond with targeted, evidence-based encouragement referencing his actual traits, interests, and test results. Be his hype man, but make it real.
+IMPORTANT TONE DIRECTIVE: ${p.name} tends to be down on himself and anxious about the future. Counter that with SPECIFIC evidence from his profile. Be his hype man, but make it real.
 
 STUDENT PROFILE:
 Name: ${p.name || "there"}
-Studying: History at community college
+Studying: ${p.major || "History"} at community college
 Interests: ${p.interests?.join(", ") || "not specified"}
 Hobbies: ${p.hobbies?.join(", ") || "not specified"}
 Natural strengths: ${p.strengths?.join(", ") || "not specified"}
-Hyperfixations / deep dives: ${p.hyperfixation || "not specified"}
+Hyperfixations: ${p.hyperfixation || "not specified"}
 Favorite books: ${p.books || "not specified"}
 Favorite movies/shows: ${p.movies || "not specified"}
 Favorite video games: ${p.games || "not specified"}
@@ -112,56 +112,87 @@ Work experience: ${p.workTypes?.join(", ") || "none listed"}
 Liked/disliked about work: ${p.workDetails || "not specified"}
 Career ideas so far: ${p.dreamJob || "no idea yet"}
 
-PERSONALITY ASSESSMENTS:
-- DISC: D=${p.disc?.D ?? "?"}, I=${p.disc?.I ?? "?"}, S=${p.disc?.S ?? "?"}, C=${p.disc?.C ?? "?"}
+PERSONALITY:
+- DISC: D=${p.disc?.D ?? "?"}%, I=${p.disc?.I ?? "?"}%, S=${p.disc?.S ?? "?"}%, C=${p.disc?.C ?? "?"}%
 - Holland Code (top 3): ${p.holland?.join(", ") || "not taken"}
-- Enneagram: ${p.enneagram ? `${p.enneagram}${p.enneagramWing ? ` (wing: ${p.enneagramWing})` : ""} — ${ENNEAGRAM_LABELS[p.enneagram.replace(/w\d/,"")] || p.enneagram}` : "not taken"}
+- Enneagram: ${p.enneagram ? `${p.enneagram}${p.enneagramWing ? ` (${p.enneagramWing})` : ""} — ${ENNEAGRAM_LABELS[p.enneagram.replace(/w\\d/,"")] || ""}` : "not taken"}
 - Myers-Briggs: ${p.mbti || "not taken"}
 - OCEAN: O=${p.ocean?.O != null ? OCEAN_LEVELS[p.ocean.O] : "?"}, C=${p.ocean?.C != null ? OCEAN_LEVELS[p.ocean.C] : "?"}, E=${p.ocean?.E != null ? OCEAN_LEVELS[p.ocean.E] : "?"}, A=${p.ocean?.A != null ? OCEAN_LEVELS[p.ocean.A] : "?"}, N=${p.ocean?.N != null ? OCEAN_LEVELS[p.ocean.N] : "?"}
+${p.extraContext ? `\nExtra context: ${p.extraContext}` : ""}
 
-KEY INSIGHTS TO WEAVE IN:
-- History major = research, critical thinking, writing, pattern recognition, understanding human behavior — ALL elite transferable skills. Treat this as an asset.
-- Community college = strategic financial choice. Never a limitation.
-- Hyperfixation tendency = depth, mastery, obsessive expertise. This is a superpower in the right field.
-- His favorite media (books/movies/games) tells you what themes, worlds, and problems genuinely light him up. Use these as clues to what he'd love doing.
-- Grades aren't the story — his curiosity, patterns, and personality are.
+YOUR OUTPUT MUST BE VALID JSON ONLY. No markdown, no preamble, no explanation outside the JSON. Return exactly this structure:
 
-YOUR OUTPUT — Generate a full CAREER MAP with exactly these tiers:
-
-🎯 TIER 1 — YOUR LANE (12–18 jobs)
-Careers he'd genuinely thrive in. For each:
-• Job title
-• Why it fits HIM — reference specific traits, test results, interests
-• Salary: realistic US range + median (e.g. $52k–$95k, median ~$68k)
-• Where the jobs are: top cities/regions + remote availability
-• Day in the life: 2–3 sentences — pace, environment, interactions, what you actually do
-• LinkedIn tip: exact job title to search + what to say cold
-• AI-resistance: Low / Medium / High
-• First step: one concrete action this week
-
-🔭 TIER 2 — WORTH EXPLORING (15–20 jobs)
-Careers worth a closer look with some pivot. For each:
-• Job title + why it could fit + what the pivot looks like
-• Salary range
-• Where the jobs are + remote availability
-• Day in the life (2 sentences)
-• LinkedIn tip
-
-🃏 TIER 3 — WILD CARDS (10 jobs)
-Surprising, niche, or unconventional careers most people have never heard of that he could absolutely crush. For each:
-• Job title + why it's a wild card fit for him specifically
-• Salary range + where this work exists
-
-End with:
-⚡ YOUR NEXT MOVE THIS WEEK
-One specific, concrete action — not "explore your options" but something real like "message 3 people on LinkedIn using this script" or "sign up for this exact free course."
+{
+  "intro": "2-3 sentence personal opener using his name, referencing his specific profile, hyping him up with evidence",
+  "tier1": [
+    {
+      "title": "Job Title",
+      "salary": "$55k–$95k",
+      "median": "~$72k",
+      "aiRisk": "Low" | "Medium" | "High",
+      "remote": true | false,
+      "degree": "No degree" | "Certificate" | "Associate's" | "Bachelor's" | "Master's",
+      "whyFit": "2-3 sentences referencing his specific traits, test results, interests",
+      "dayInLife": "2-3 sentences on pace, environment, what you actually do daily",
+      "path": [
+        "Step 1: Exact concrete action (e.g. 'Complete Google's free UX Research certificate on Coursera — 6 hours')",
+        "Step 2: ...",
+        "Step 3: ...",
+        "Step 4: ...",
+        "Step 5: First job title to search and apply for"
+      ],
+      "coffeeChat": {
+        "why": "1 sentence on why talking to people in this field is low-stakes and worth it for him specifically",
+        "whoToFind": ["Role title 1 to search on LinkedIn", "Role title 2", "Role title 3"],
+        "where": ["LinkedIn — search '[job title] at [company type]'", "One specific company name to look up", "One community or Slack group name"],
+        "script": "Hi [Name], I'm a [major] student at community college exploring careers in [field]. I came across your profile and I'm genuinely curious about your path — not looking for a job, just want to learn. Would you be open to a 15-minute call sometime? No agenda, I promise."
+      }
+    }
+  ],
+  "tier2": [
+    {
+      "title": "Job Title",
+      "salary": "$50k–$85k",
+      "aiRisk": "Low" | "Medium" | "High",
+      "remote": true | false,
+      "degree": "No degree" | "Certificate" | "Associate's" | "Bachelor's" | "Master's",
+      "whyFit": "1-2 sentences",
+      "pivot": "1 sentence on what small pivot or skill gets him here",
+      "path": ["Step 1", "Step 2", "Step 3"],
+      "coffeeChat": {
+        "whoToFind": ["Role title 1", "Role title 2"],
+        "where": ["LinkedIn search tip", "One company or community"],
+        "script": "Short version of the outreach script personalized to this field"
+      }
+    }
+  ],
+  "tier3": [
+    {
+      "title": "Job Title",
+      "salary": "$45k–$90k",
+      "aiRisk": "Low" | "Medium" | "High",
+      "remote": true | false,
+      "degree": "No degree" | "Certificate" | "Associate's" | "Bachelor's" | "Master's",
+      "whyWildCard": "2 sentences on why this surprising fit works for him specifically",
+      "path": ["Step 1", "Step 2", "Step 3"],
+      "coffeeChat": {
+        "whoToFind": ["Role title 1"],
+        "where": ["Where to find these people"],
+        "script": "Short outreach script"
+      }
+    }
+  ],
+  "nextMove": "One hyper-specific action for this week — not vague, something real he can do in the next 48 hours"
+}
 
 RULES:
-- Use his name throughout. Be personal, not generic.
-- Reference his actual data every time — specific test results, interests, hyperfixations.
-- Frame LinkedIn outreach as low-stakes curiosity, not pressure.
-- If he seems anxious or down, push back with specifics.
-- After the career map, stay in full conversation mode — go deep on any follow-up.
+- tier1 must have 8-10 jobs
+- tier2 must have 6-8 jobs  
+- tier3 must have 4-5 jobs
+- Every whyFit must reference his actual data — name his specific traits, test scores, interests
+- Path steps must be numbered, concrete, zero ambiguity — no "explore options", always "do X at Y"
+- Coffee chat scripts must feel casual, warm, and low-pressure — he's anxious about this
+- Return ONLY the JSON object. Nothing before or after it.
 `;
 
 // ─── SHARED STYLES ────────────────────────────────────────────────────────────
@@ -1044,303 +1075,332 @@ function Step7({ onSubmit, onBack }) {
   );
 }
 
+// ─── CAREER MAP UI ────────────────────────────────────────────────────────────
+const RISK_COLOR = { Low:"#16a34a", Medium:"#d97706", High:"#dc2626" };
+const RISK_BG   = { Low:"#f0fdf4", Medium:"#fffbeb", High:"#fef2f2" };
+
+function Badge({ label, color, bg }) {
+  return (
+    <span style={{ fontFamily:"'Sora',sans-serif", fontSize:11, fontWeight:700, color, background:bg, borderRadius:20, padding:"2px 9px", whiteSpace:"nowrap" }}>
+      {label}
+    </span>
+  );
+}
+
+function CareerCard({ job, saved, onSave }) {
+  const [open, setOpen] = useState(false);
+  const [pathStep, setPathStep] = useState(0);
+  const [copiedScript, setCopiedScript] = useState(false);
+
+  const copyScript = () => {
+    navigator.clipboard.writeText(job.coffeeChat?.script || "").then(() => {
+      setCopiedScript(true);
+      setTimeout(() => setCopiedScript(false), 2000);
+    });
+  };
+
+  return (
+    <div style={{
+      background:T.white, border:`1.5px solid ${open ? T.blue : T.border}`,
+      borderRadius:16, overflow:"hidden",
+      boxShadow: open ? `0 4px 20px rgba(26,111,219,0.12)` : "0 1px 4px rgba(0,0,0,0.04)",
+      transition:"all 0.2s", marginBottom:10,
+    }}>
+      {/* Collapsed row */}
+      <div onClick={() => setOpen(o => !o)} style={{ padding:"14px 16px", cursor:"pointer", display:"flex", alignItems:"center", gap:10 }}>
+        <div style={{ flex:1, minWidth:0 }}>
+          <div style={{ fontFamily:"'Sora',sans-serif", fontSize:15, fontWeight:700, color:T.text, marginBottom:6 }}>{job.title}</div>
+          <div style={{ display:"flex", flexWrap:"wrap", gap:5 }}>
+            <Badge label={job.salary} color={T.blue} bg={T.blueLight} />
+            <Badge label={`AI Risk: ${job.aiRisk}`} color={RISK_COLOR[job.aiRisk]||T.muted} bg={RISK_BG[job.aiRisk]||T.bg} />
+            {job.remote && <Badge label="Remote ✓" color="#16a34a" bg="#f0fdf4" />}
+            <Badge label={job.degree} color={T.muted} bg="#f8faff" />
+          </div>
+        </div>
+        <div style={{ display:"flex", gap:8, alignItems:"center", flexShrink:0 }}>
+          <button onClick={e => { e.stopPropagation(); onSave(job.title); }} style={{
+            width:32, height:32, borderRadius:10, border:`1.5px solid ${saved ? T.blue : T.border}`,
+            background: saved ? T.blueLight : T.white,
+            display:"flex", alignItems:"center", justifyContent:"center",
+            cursor:"pointer", fontSize:17, transition:"all 0.15s",
+          }} title={saved ? "Saved" : "Save to shortlist"}>
+            {saved ? "★" : "☆"}
+          </button>
+          <div style={{ fontSize:18, color:T.muted, transition:"transform 0.2s", transform: open ? "rotate(180deg)" : "rotate(0deg)" }}>⌄</div>
+        </div>
+      </div>
+
+      {/* Expanded */}
+      {open && (
+        <div style={{ borderTop:`1px solid ${T.border}`, padding:"4px 16px 18px" }}>
+
+          {/* Why it fits */}
+          <div style={{ paddingTop:14, marginBottom:14 }}>
+            <div style={{ fontFamily:"'Sora',sans-serif", fontSize:10, fontWeight:700, color:T.blue, textTransform:"uppercase", letterSpacing:"0.07em", marginBottom:6 }}>Why this fits you</div>
+            <p style={{ fontFamily:"'Sora',sans-serif", fontSize:13, color:T.text, lineHeight:1.8, margin:0 }}>{job.whyFit}</p>
+          </div>
+
+          {/* Day in life */}
+          {(job.dayInLife || job.pivot) && (
+            <div style={{ marginBottom:16 }}>
+              <div style={{ fontFamily:"'Sora',sans-serif", fontSize:10, fontWeight:700, color:T.muted, textTransform:"uppercase", letterSpacing:"0.07em", marginBottom:6 }}>
+                {job.dayInLife ? "Day in the life" : "The pivot"}
+              </div>
+              <p style={{ fontFamily:"'Sora',sans-serif", fontSize:13, color:T.muted, lineHeight:1.8, margin:0 }}>{job.dayInLife || job.pivot}</p>
+            </div>
+          )}
+
+          {/* Path tracker */}
+          {job.path?.length > 0 && (
+            <div style={{ marginBottom:16 }}>
+              <div style={{ fontFamily:"'Sora',sans-serif", fontSize:10, fontWeight:700, color:T.muted, textTransform:"uppercase", letterSpacing:"0.07em", marginBottom:10 }}>Your path in — tap each step as you complete it</div>
+              <div style={{ display:"flex", flexDirection:"column", gap:7 }}>
+                {job.path.map((step, i) => {
+                  const done = i < pathStep;
+                  const current = i === pathStep;
+                  return (
+                    <div key={i} onClick={() => setPathStep(done ? i : i + 1)} style={{
+                      display:"flex", gap:12, alignItems:"flex-start", cursor:"pointer",
+                      padding:"10px 12px", borderRadius:12,
+                      background: done ? "#f0fdf4" : current ? T.blueLight : T.bg,
+                      border:`1.5px solid ${done ? "#86efac" : current ? T.blue : T.border}`,
+                      transition:"all 0.15s",
+                    }}>
+                      <div style={{
+                        width:24, height:24, borderRadius:"50%", flexShrink:0, marginTop:1,
+                        background: done ? "#16a34a" : current ? T.blue : T.white,
+                        border:`2px solid ${done ? "#16a34a" : current ? T.blue : T.border}`,
+                        display:"flex", alignItems:"center", justifyContent:"center",
+                        fontFamily:"'Sora',sans-serif", fontSize:11, fontWeight:700,
+                        color: done || current ? T.white : T.muted,
+                      }}>
+                        {done ? "✓" : i + 1}
+                      </div>
+                      <span style={{ fontFamily:"'Sora',sans-serif", fontSize:13, color: done ? "#16a34a" : current ? T.blue : T.muted, lineHeight:1.65, fontWeight: current ? 600 : 400 }}>
+                        {step}
+                      </span>
+                    </div>
+                  );
+                })}
+              </div>
+              {pathStep > 0 && (
+                <button onClick={() => setPathStep(0)} style={{ marginTop:8, fontFamily:"'Sora',sans-serif", fontSize:11, color:T.muted, background:"none", border:"none", cursor:"pointer", padding:0 }}>
+                  ↩ Reset progress
+                </button>
+              )}
+            </div>
+          )}
+
+          {/* Coffee chat */}
+          {job.coffeeChat && (
+            <div style={{ background:"#f8faff", border:`1px solid ${T.border}`, borderRadius:14, padding:"14px 16px" }}>
+              <div style={{ fontFamily:"'Sora',sans-serif", fontSize:10, fontWeight:700, color:T.blue, textTransform:"uppercase", letterSpacing:"0.07em", marginBottom:8 }}>☕ Coffee chat — easiest way to learn</div>
+              {job.coffeeChat.why && (
+                <p style={{ fontFamily:"'Sora',sans-serif", fontSize:13, color:T.muted, lineHeight:1.7, marginBottom:12, marginTop:0 }}>{job.coffeeChat.why}</p>
+              )}
+              <div style={{ marginBottom:12 }}>
+                <div style={{ fontFamily:"'Sora',sans-serif", fontSize:11, fontWeight:600, color:T.muted, marginBottom:6 }}>Who to find</div>
+                <div style={{ display:"flex", flexWrap:"wrap", gap:6 }}>
+                  {job.coffeeChat.whoToFind?.map(who => (
+                    <span key={who} style={{ fontFamily:"'Sora',sans-serif", fontSize:12, color:T.blue, background:T.blueLight, borderRadius:20, padding:"3px 10px", fontWeight:600 }}>{who}</span>
+                  ))}
+                </div>
+              </div>
+              <div style={{ marginBottom:14 }}>
+                <div style={{ fontFamily:"'Sora',sans-serif", fontSize:11, fontWeight:600, color:T.muted, marginBottom:6 }}>Where to find them</div>
+                {job.coffeeChat.where?.map(w => (
+                  <div key={w} style={{ fontFamily:"'Sora',sans-serif", fontSize:12, color:T.text, display:"flex", gap:6, alignItems:"flex-start", marginBottom:4 }}>
+                    <span style={{ color:T.blue, flexShrink:0 }}>→</span>{w}
+                  </div>
+                ))}
+              </div>
+              <div>
+                <div style={{ fontFamily:"'Sora',sans-serif", fontSize:11, fontWeight:600, color:T.muted, marginBottom:6 }}>Message — copy & paste this exactly</div>
+                <div style={{ background:T.white, border:`1px solid ${T.blueMid}`, borderRadius:10, padding:"10px 12px", fontFamily:"'Sora',sans-serif", fontSize:12, color:T.text, lineHeight:1.75, marginBottom:8, whiteSpace:"pre-wrap" }}>
+                  {job.coffeeChat.script}
+                </div>
+                <button onClick={copyScript} style={{
+                  padding:"7px 16px", background: copiedScript ? "#f0fdf4" : T.blue, border:"none", borderRadius:8,
+                  fontFamily:"'Sora',sans-serif", fontSize:12, fontWeight:700,
+                  color: copiedScript ? "#16a34a" : T.white, cursor:"pointer", transition:"all 0.15s",
+                }}>
+                  {copiedScript ? "✓ Copied!" : "Copy message"}
+                </button>
+              </div>
+            </div>
+          )}
+        </div>
+      )}
+    </div>
+  );
+}
+
+function CareerMap({ data, name, onReset }) {
+  const [tab, setTab] = useState(0);
+  const [saved, setSaved] = useState(() => {
+    try { return JSON.parse(localStorage.getItem("samuel_saved") || "[]"); } catch { return []; }
+  });
+
+  const toggleSave = (title) => {
+    const next = saved.includes(title) ? saved.filter(t => t !== title) : [...saved, title];
+    setSaved(next);
+    try { localStorage.setItem("samuel_saved", JSON.stringify(next)); } catch {}
+  };
+
+  const allJobs = [...(data.tier1||[]),...(data.tier2||[]),...(data.tier3||[])];
+  const tabs = [
+    { label:"🎯 Your Lane",   jobs: data.tier1||[], desc:"Careers you'd genuinely thrive in" },
+    { label:"🔭 Explore",     jobs: data.tier2||[], desc:"Worth a closer look with a small pivot" },
+    { label:"🃏 Wild Cards",  jobs: data.tier3||[], desc:"Surprising fits most people never consider" },
+    ...(saved.length > 0 ? [{ label:`★ Saved (${saved.length})`, jobs: allJobs.filter(j => saved.includes(j.title)), desc:"Your shortlist" }] : []),
+  ];
+  const current = tabs[Math.min(tab, tabs.length-1)];
+
+  return (
+    <div style={{ height:"100%", display:"flex", flexDirection:"column" }}>
+      {/* Header */}
+      <div style={{ padding:"12px 16px", borderBottom:`1px solid ${T.border}`, display:"flex", alignItems:"center", gap:12, flexShrink:0, background:T.white }}>
+        <div style={{ width:38, height:38, borderRadius:12, background:`linear-gradient(135deg,${T.blue},#4a9fef)`, display:"flex", alignItems:"center", justifyContent:"center", fontSize:17, flexShrink:0 }}>🧭</div>
+        <div style={{ flex:1, minWidth:0 }}>
+          <div style={{ fontFamily:"'Sora',sans-serif", fontSize:15, fontWeight:700, color:T.text }}>Samuel</div>
+          <div style={{ fontFamily:"'Sora',sans-serif", fontSize:11, color:T.muted }}>{name}'s Career Map · {allJobs.length} careers mapped</div>
+        </div>
+        <button onClick={() => { if(window.confirm("Start over? This clears all your answers.")) onReset(); }} title="Start over" style={{ width:34, height:34, borderRadius:10, background:T.bg, border:`1.5px solid ${T.border}`, cursor:"pointer", fontSize:16, display:"flex", alignItems:"center", justifyContent:"center", color:T.muted }}>↺</button>
+      </div>
+
+      {/* Intro */}
+      {data.intro && (
+        <div style={{ padding:"12px 16px", background:T.blueLight, borderBottom:`1px solid ${T.blueMid}`, flexShrink:0 }}>
+          <p style={{ fontFamily:"'Sora',sans-serif", fontSize:13, color:T.blue, lineHeight:1.8, margin:0, fontWeight:500 }}>{data.intro}</p>
+        </div>
+      )}
+
+      {/* Tabs */}
+      <div style={{ display:"flex", borderBottom:`1px solid ${T.border}`, flexShrink:0, background:T.white, overflowX:"auto" }}>
+        {tabs.map((t, i) => (
+          <button key={i} onClick={() => setTab(i)} style={{
+            padding:"11px 18px", fontFamily:"'Sora',sans-serif", fontSize:12, fontWeight:700,
+            color: tab===i ? T.blue : T.muted,
+            background: tab===i ? T.white : "#fafbff",
+            border:"none", borderBottom:`2.5px solid ${tab===i ? T.blue : "transparent"}`,
+            cursor:"pointer", whiteSpace:"nowrap", transition:"all 0.15s",
+          }}>{t.label}</button>
+        ))}
+      </div>
+
+      {/* Cards */}
+      <div style={{ flex:1, overflow:"auto", padding:"14px 14px 14px", background:"#f8faff" }}>
+        <p style={{ fontFamily:"'Sora',sans-serif", fontSize:12, color:T.muted, marginBottom:12, marginTop:0 }}>
+          {current.desc} · <strong style={{ color:T.text }}>{current.jobs.length} careers</strong>
+        </p>
+        {current.jobs.map((job, i) => (
+          <CareerCard key={`${job.title}-${i}`} job={job} saved={saved.includes(job.title)} onSave={toggleSave} />
+        ))}
+        {current.jobs.length === 0 && (
+          <div style={{ textAlign:"center", padding:"48px 0", fontFamily:"'Sora',sans-serif", fontSize:14, color:T.muted }}>
+            {tab === 3 ? "Tap ☆ on any career to save it here" : "No careers in this tier"}
+          </div>
+        )}
+      </div>
+
+      {/* Next move */}
+      {data.nextMove && (
+        <div style={{ padding:"14px 16px", background:T.blue, flexShrink:0 }}>
+          <div style={{ fontFamily:"'Sora',sans-serif", fontSize:10, fontWeight:700, color:"rgba(255,255,255,0.65)", textTransform:"uppercase", letterSpacing:"0.07em", marginBottom:6 }}>⚡ Your move this week</div>
+          <p style={{ fontFamily:"'Sora',sans-serif", fontSize:13, color:T.white, lineHeight:1.75, margin:0 }}>{data.nextMove}</p>
+        </div>
+      )}
+    </div>
+  );
+}
+
 // ─── CHAT VIEW ────────────────────────────────────────────────────────────────
-function ChatView({ profile, apiKey, onReset }) {
-  const [messages, setMessages] = useState([]);
-  const [input, setInput] = useState("");
+function ChatView({ profile, onReset }) {
+  const [careerMap, setCareerMap] = useState(null);
   const [loading, setLoading] = useState(false);
+  const [error, setError] = useState("");
   const [ready, setReady] = useState(false);
-  const [exportMsg, setExportMsg] = useState("");
-  const bottomRef = useRef(null);
-  const taRef = useRef(null);
 
-  useEffect(() => { bottomRef.current?.scrollIntoView({ behavior:"smooth" }); }, [messages, loading]);
-  useEffect(() => {
-    if (taRef.current) {
-      taRef.current.style.height = "auto";
-      taRef.current.style.height = Math.min(taRef.current.scrollHeight, 140) + "px";
-    }
-  }, [input]);
   useEffect(() => { if (!ready) { setReady(true); kickoff(); } }, []);
-
-  const getFullText = () =>
-    messages.map(m => `${m.role === "user" ? profile.name : "Samuel"}:\n${m.content}`).join("\n\n---\n\n");
-
-  const handleCopy = () => {
-    navigator.clipboard.writeText(getFullText()).then(() => {
-      setExportMsg("Copied!"); setTimeout(() => setExportMsg(""), 2000);
-    });
-  };
-
-  const handleEmail = () => {
-    const subject = encodeURIComponent("My Career Map — Samuel");
-    const body = encodeURIComponent(getFullText());
-    window.open(`mailto:?subject=${subject}&body=${body}`);
-  };
-
-  const handlePrint = () => {
-    const win = window.open("", "_blank");
-    win.document.write(`
-      <html><head><title>Career Map — Samuel</title>
-      <style>
-        @import url('https://fonts.googleapis.com/css2?family=Sora:wght@400;600;700&display=swap');
-        body{font-family:'Sora',sans-serif;max-width:760px;margin:40px auto;padding:0 24px;color:#0f172a;line-height:1.75;background:#fff;}
-        h1{font-size:26px;margin-bottom:4px;color:#1a6fdb;}
-        .meta{color:#64748b;font-size:13px;margin-bottom:36px;}
-        .msg{margin-bottom:28px;}
-        .who{font-size:11px;font-weight:700;text-transform:uppercase;letter-spacing:0.08em;color:#94a3b8;margin-bottom:8px;}
-        .who.samuel{color:#1a6fdb;}
-        .content{font-size:15px;white-space:pre-wrap;}
-        hr{border:none;border-top:1px solid #e2e8f0;margin:28px 0;}
-      </style></head><body>
-      <h1>🧭 Career Map</h1>
-      <div class="meta">Generated by Samuel · ${profile.name} · ${new Date().toLocaleDateString()}</div>
-      ${messages.map(m => `
-        <div class="msg">
-          <div class="who ${m.role==="assistant"?"samuel":""}">${m.role==="assistant"?"Samuel":profile.name}</div>
-          <div class="content">${m.content.replace(/</g,"&lt;").replace(/>/g,"&gt;").replace(/\*\*(.*?)\*\*/g,"<strong>$1</strong>")}</div>
-        </div><hr/>
-      `).join("")}
-      </body></html>
-    `);
-    win.document.close(); win.print();
-  };
-
-  const callApi = async (msgs) => {
-    const res = await fetch("/api/chat", {
-      method:"POST",
-      headers:{
-        "Content-Type":"application/json",
-      },
-      body: JSON.stringify({
-        model:"claude-sonnet-4-20250514",
-        max_tokens:5000,
-        system:buildSystemPrompt(profile),
-        messages:msgs,
-      }),
-    });
-    const data = await res.json();
-    if (data.error) throw new Error(data.error.message);
-    return data.content[0].text;
-  };
 
   const kickoff = async () => {
     setLoading(true);
+    setError("");
     const oceanDesc = profile.ocean
       ? Object.entries(profile.ocean).map(([k,v]) => `${k}=${OCEAN_LEVELS[v]}`).join(", ")
       : "not set";
     const discDesc = profile.disc
       ? Object.entries(profile.disc).map(([k,v]) => `${k}=${v}%`).join(", ")
       : "not taken";
-    const opener = `Hi Samuel! I'm ${profile.name}, studying ${profile.major || "History"} at community college.
 
-My interests: ${profile.interests?.join(", ")||"not specified"}
-My hobbies: ${profile.hobbies?.join(", ")||"not specified"}
-Things I've gone deep on: ${profile.hyperfixation||"nothing specific yet"}
-My natural strengths: ${profile.strengths?.join(", ")||"not specified"}
-Favorite books: ${profile.books||"not specified"}
-Favorite movies/shows: ${profile.movies||"not specified"}
-Favorite video games: ${profile.games||"not specified"}
-Work experience: ${profile.workTypes?.join(", ")||"none"}
-What I liked/disliked about work: ${profile.workDetails||"not specified"}
-Career ideas: ${profile.dreamJob||"honestly no idea yet"}
-
-Personality results:
-- DISC: ${discDesc}
-- Holland Code: ${profile.holland?.join(", ")||"not taken"}
-- Enneagram: ${profile.enneagram ? `Type ${profile.enneagram}${profile.enneagramWing ? ` (${profile.enneagramWing})` : ""} — ${ENNEAGRAM_LABELS[profile.enneagram.replace(/w\d/,"")] || ""}` : "not taken"}
-- MBTI: ${profile.mbti||"not taken"}
-- OCEAN: ${oceanDesc}
-
-${profile.extraContext ? `Extra context: ${profile.extraContext}` : ""}
-
-Can you build my full career map?`;
+    const prompt = `Build my career map as JSON. Profile:
+Name: ${profile.name}, Major: ${profile.major||"History"}
+Interests: ${profile.interests?.join(", ")||"not specified"}
+Hobbies: ${profile.hobbies?.join(", ")||"not specified"}
+Hyperfixations: ${profile.hyperfixation||"none"}
+Strengths: ${profile.strengths?.join(", ")||"not specified"}
+Books: ${profile.books||"not specified"} | Movies: ${profile.movies||"not specified"} | Games: ${profile.games||"not specified"}
+Work: ${profile.workTypes?.join(", ")||"none"} — ${profile.workDetails||""}
+Career ideas: ${profile.dreamJob||"no idea"}
+DISC: ${discDesc} | Holland: ${profile.holland?.join(", ")||"not taken"}
+Enneagram: ${profile.enneagram||"not taken"}${profile.enneagramWing ? ` (${profile.enneagramWing})` : ""} | MBTI: ${profile.mbti||"not taken"}
+OCEAN: ${oceanDesc}
+${profile.extraContext ? `Extra: ${profile.extraContext}` : ""}`;
 
     try {
-      const reply = await callApi([{ role:"user", content:opener }]);
-      setMessages([{ role:"assistant", content:reply }]);
+      const res = await fetch("/api/chat", {
+        method:"POST",
+        headers:{ "Content-Type":"application/json" },
+        body: JSON.stringify({
+          system: buildSystemPrompt(profile),
+          messages:[{ role:"user", content:prompt }],
+        }),
+      });
+      const data = await res.json();
+      const text = data.content?.[0]?.text || "";
+      const clean = text.replace(/^```json\s*/,"").replace(/\s*```$/,"").trim();
+      const parsed = JSON.parse(clean);
+      setCareerMap(parsed);
     } catch(e) {
-      setMessages([{ role:"assistant", content:`Something went wrong: ${e.message}` }]);
+      setError(`Something went wrong. ${e.message}`);
     }
     setLoading(false);
   };
-
-  const send = async () => {
-    if (!input.trim() || loading) return;
-    const userMsg = { role:"user", content:input.trim() };
-    const allMsgs = [...messages, userMsg];
-    setMessages(allMsgs);
-    setInput("");
-    setLoading(true);
-    try {
-      const reply = await callApi(allMsgs);
-      setMessages(prev => [...prev, { role:"assistant", content:reply }]);
-    } catch(e) {
-      setMessages(prev => [...prev, { role:"assistant", content:`Error: ${e.message}` }]);
-    }
-    setLoading(false);
-  };
-
-  const chips = [
-    "Tell me more about Tier 1",
-    "Which jobs don't need a 4-year degree?",
-    "Show me the wild cards",
-    "What should I actually do this week?",
-    "I feel behind — is that normal?",
-    "Which jobs are most remote-friendly?",
-    "Write me a LinkedIn cold message",
-    "Which careers pay the most?",
-  ];
 
   return (
     <div style={{ minHeight:"100vh", background:T.blue, display:"flex", alignItems:"center", justifyContent:"center", padding:"24px" }}>
       <style>{`
         @import url('https://fonts.googleapis.com/css2?family=Sora:wght@300;400;500;600;700&display=swap');
         *{box-sizing:border-box;}
-        @keyframes blink{0%,100%{opacity:0.2;transform:scale(0.8)}50%{opacity:1;transform:scale(1)}}
+        @keyframes pulse{0%,100%{opacity:0.2;transform:scale(0.8)}50%{opacity:1;transform:scale(1)}}
       `}</style>
       <div style={{ width:"100%", maxWidth:760, height:"calc(100vh - 48px)", maxHeight:900, display:"flex", flexDirection:"column", background:T.white, borderRadius:20, overflow:"hidden", boxShadow:"0 24px 80px rgba(0,0,0,0.35)" }}>
 
-      {/* Header */}
-      <div style={{
-        background:T.white, padding:"12px 16px",
-        display:"flex", alignItems:"center", gap:12, flexShrink:0,
-        borderBottom:`1px solid ${T.border}`,
-        boxShadow:"0 1px 8px rgba(26,111,219,0.08)",
-      }}>
-        <div style={{
-          width:40, height:40, borderRadius:12, flexShrink:0,
-          background:`linear-gradient(135deg,${T.blue},#4a9fef)`,
-          display:"flex", alignItems:"center", justifyContent:"center",
-          fontSize:18, boxShadow:`0 2px 8px rgba(26,111,219,0.25)`,
-        }}>🧭</div>
-        <div style={{ flex:1, minWidth:0 }}>
-          <div style={{ fontFamily:"'Sora',sans-serif", fontWeight:700, color:T.text, fontSize:15 }}>Samuel</div>
-          <div style={{ fontFamily:"'Sora',sans-serif", fontSize:11, color:T.muted, overflow:"hidden", textOverflow:"ellipsis", whiteSpace:"nowrap" }}>
-            Career Advisor · {profile.name}{profile.mbti ? ` · ${profile.mbti}` : ""}{profile.enneagram ? ` · Type ${profile.enneagram}` : ""}
-          </div>
-        </div>
-        {messages.length > 0 && !loading && (
-          <div style={{ display:"flex", gap:6, alignItems:"center", flexShrink:0 }}>
-            {exportMsg && <span style={{ fontFamily:"'Sora',sans-serif", fontSize:11, color:T.blue, marginRight:2 }}>{exportMsg}</span>}
-            {[
-              { label:"📋", title:"Copy to clipboard",   fn:handleCopy },
-              { label:"✉️", title:"Email to myself",      fn:handleEmail },
-              { label:"🖨️", title:"Print / Save as PDF",  fn:handlePrint },
-              { label:"↺",  title:"Start over",           fn:() => { if(window.confirm("Start over? This will clear all your answers.")) onReset(); } },
-            ].map(btn => (
-              <button key={btn.label} onClick={btn.fn} title={btn.title} style={{
-                width:34, height:34, borderRadius:10,
-                background:T.bg, border:`1.5px solid ${T.border}`,
-                cursor:"pointer", fontSize:btn.label==="↺"?18:15,
-                display:"flex", alignItems:"center", justifyContent:"center",
-                transition:"background 0.15s",
-              }}>
-                {btn.label}
-              </button>
-            ))}
+        {loading && (
+          <div style={{ flex:1, display:"flex", flexDirection:"column", alignItems:"center", justifyContent:"center", gap:20, padding:40, background:T.white }}>
+            <div style={{ width:60, height:60, borderRadius:18, background:`linear-gradient(135deg,${T.blue},#4a9fef)`, display:"flex", alignItems:"center", justifyContent:"center", fontSize:28, boxShadow:`0 8px 24px rgba(26,111,219,0.3)` }}>🧭</div>
+            <div style={{ fontFamily:"'Sora',sans-serif", fontSize:17, fontWeight:700, color:T.text }}>Building your career map…</div>
+            <div style={{ fontFamily:"'Sora',sans-serif", fontSize:13, color:T.muted, textAlign:"center", maxWidth:300, lineHeight:1.7 }}>
+              Analyzing your personality, interests, and strengths.<br/>Takes about 30 seconds.
+            </div>
+            <div style={{ display:"flex", gap:7, marginTop:4 }}>
+              {[0,1,2].map(i => (
+                <div key={i} style={{ width:10, height:10, borderRadius:"50%", background:T.blue, animation:`pulse 1.2s ease-in-out ${i*0.2}s infinite` }} />
+              ))}
+            </div>
           </div>
         )}
-      </div>
 
-      {/* Messages */}
-      <div style={{ flex:1, overflow:"auto", padding:"20px 16px", background:"#f8faff" }}>
-        <div style={{ maxWidth:680, margin:"0 auto" }}>
-          {loading && messages.length === 0 && (
-            <div style={{ display:"flex", gap:10, marginBottom:16 }}>
-              <div style={chatStyles.aiAvatar}>🧭</div>
-              <div style={{ background:T.white, border:`1px solid ${T.border}`, borderRadius:"4px 16px 16px 16px", padding:"14px 16px", boxShadow:"0 1px 4px rgba(26,111,219,0.06)" }}>
-                <div style={{ fontFamily:"'Sora',sans-serif", fontSize:13, color:T.muted, marginBottom:8 }}>Building your career map…</div>
-                <div style={{ display:"flex", gap:5 }}>
-                  {[0,1,2].map(i => <div key={i} style={{ width:8, height:8, borderRadius:"50%", background:T.blue, animation:`blink 1.2s ease-in-out ${i*0.2}s infinite` }} />)}
-                </div>
-              </div>
-            </div>
-          )}
+        {error && !loading && (
+          <div style={{ flex:1, display:"flex", flexDirection:"column", alignItems:"center", justifyContent:"center", gap:16, padding:40 }}>
+            <div style={{ fontFamily:"'Sora',sans-serif", fontSize:14, color:"#dc2626", textAlign:"center", lineHeight:1.65 }}>{error}</div>
+            <button onClick={kickoff} style={{ padding:"11px 28px", background:T.blue, color:T.white, border:"none", borderRadius:12, fontFamily:"'Sora',sans-serif", fontSize:14, fontWeight:700, cursor:"pointer" }}>Try again</button>
+          </div>
+        )}
 
-          {messages.map((msg, i) => (
-            <div key={i}>
-              <div style={{ marginBottom:12, display:"flex", gap:10, flexDirection:msg.role==="user"?"row-reverse":"row", alignItems:"flex-start" }}>
-                <div style={msg.role==="user" ? chatStyles.userAvatar : chatStyles.aiAvatar}>
-                  {msg.role==="user" ? (profile.name?.[0]?.toUpperCase()||"Y") : "🧭"}
-                </div>
-                <div style={{
-                  maxWidth:"86%",
-                  background: msg.role==="user" ? T.blue : T.white,
-                  border: msg.role==="user" ? "none" : `1px solid ${T.border}`,
-                  borderRadius: msg.role==="user" ? "16px 4px 16px 16px" : "4px 16px 16px 16px",
-                  padding:"13px 16px",
-                  boxShadow: msg.role==="user" ? `0 2px 10px rgba(26,111,219,0.25)` : "0 2px 8px rgba(26,111,219,0.06)",
-                }}>
-                  {msg.role === "user"
-                    ? <p style={{ fontFamily:"'Sora',sans-serif", fontSize:14, lineHeight:1.7, color:T.white, margin:0 }}>{msg.content}</p>
-                    : <Markdown text={msg.content} color={T.text} />
-                  }
-                </div>
-              </div>
-              {/* Quick chips after every AI message */}
-              {msg.role === "assistant" && i === messages.length - 1 && !loading && (
-                <div style={{ marginLeft:50, marginBottom:16 }}>
-                  <div style={{ fontFamily:"'Sora',sans-serif", fontSize:10, color:"#b8cce8", marginBottom:7, fontWeight:700, letterSpacing:"0.05em", textTransform:"uppercase" }}>Quick questions</div>
-                  <div style={{ display:"flex", flexWrap:"wrap", gap:6 }}>
-                    {chips.map(q => (
-                      <button key={q} onClick={() => { setInput(q); }} style={{
-                        padding:"6px 12px", background:T.white,
-                        border:`1.5px solid ${T.border}`, borderRadius:20,
-                        color:T.muted, fontSize:12, fontFamily:"'Sora',sans-serif",
-                        cursor:"pointer", fontWeight:500, transition:"all 0.15s",
-                      }}
-                        onMouseEnter={e => { e.currentTarget.style.borderColor=T.blue; e.currentTarget.style.color=T.blue; }}
-                        onMouseLeave={e => { e.currentTarget.style.borderColor=T.border; e.currentTarget.style.color=T.muted; }}
-                      >{q}</button>
-                    ))}
-                  </div>
-                </div>
-              )}
-            </div>
-          ))}
-
-          {loading && messages.length > 0 && (
-            <div style={{ display:"flex", gap:10, marginBottom:16 }}>
-              <div style={chatStyles.aiAvatar}>🧭</div>
-              <div style={{ background:T.white, border:`1px solid ${T.border}`, borderRadius:"4px 16px 16px 16px", padding:"12px 16px" }}>
-                <div style={{ display:"flex", gap:5 }}>
-                  {[0,1,2].map(i => <div key={i} style={{ width:8, height:8, borderRadius:"50%", background:T.blue, animation:`blink 1.2s ease-in-out ${i*0.2}s infinite` }} />)}
-                </div>
-              </div>
-            </div>
-          )}
-
-
-          <div ref={bottomRef} />
-        </div>
-      </div>
-
-      {/* Input */}
-      <div style={{ padding:"10px 16px 16px", borderTop:`1px solid ${T.border}`, background:T.white, flexShrink:0 }}>
-        <div style={{ maxWidth:680, margin:"0 auto", display:"flex", gap:8, alignItems:"flex-end" }}>
-          <textarea ref={taRef} value={input} onChange={e => setInput(e.target.value)}
-            onKeyDown={e => { if (e.key==="Enter" && !e.shiftKey) { e.preventDefault(); send(); } }}
-            placeholder="Ask Samuel anything…" rows={1}
-            style={{
-              flex:1, background:T.bg, border:`1.5px solid ${T.border}`, borderRadius:12,
-              padding:"10px 14px", color:T.text, fontSize:14,
-              fontFamily:"'Sora',sans-serif", fontWeight:300, lineHeight:1.6,
-              resize:"none", outline:"none", transition:"border 0.15s",
-            }}
-            onFocus={e => e.target.style.borderColor=T.blue}
-            onBlur={e => e.target.style.borderColor=T.border}
-          />
-          <button onClick={send} disabled={!input.trim()||loading} style={{
-            padding:"10px 16px", border:"none", borderRadius:12, fontSize:18, flexShrink:0,
-            background: input.trim()&&!loading ? T.blue : "#e2e8f0",
-            color: input.trim()&&!loading ? T.white : "#94a3b8",
-            cursor: input.trim()&&!loading ? "pointer" : "not-allowed",
-            transition:"background 0.15s",
-            boxShadow: input.trim()&&!loading ? `0 2px 8px rgba(26,111,219,0.3)` : "none",
-          }}>→</button>
-        </div>
-      </div>
+        {careerMap && !loading && (
+          <CareerMap data={careerMap} name={profile.name} onReset={onReset} />
+        )}
       </div>
     </div>
   );
@@ -1362,9 +1422,8 @@ const DEFAULT_PROFILE = {
 
 export default function App() {
   const [step, setStep] = useState(() => {
-    try { const s = localStorage.getItem(STEP_KEY); return s ? Math.min(parseInt(s,10),7) : 0; } catch{ return 0; }
+    try { const s = localStorage.getItem(STEP_KEY); return s ? Math.min(parseInt(s,10),6) : 0; } catch{ return 0; }
   });
-  const [apiKey, setApiKey] = useState("");
   const [profile, setProfile] = useState(() => {
     try {
       const saved = localStorage.getItem(STORAGE_KEY);
@@ -1372,12 +1431,11 @@ export default function App() {
     } catch { return DEFAULT_PROFILE; }
   });
 
-  // Persist profile & step to localStorage on every change
   useEffect(() => {
     try { localStorage.setItem(STORAGE_KEY, JSON.stringify(profile)); } catch{}
   }, [profile]);
   useEffect(() => {
-    try { if (step > 0 && step < 8) localStorage.setItem(STEP_KEY, String(step)); } catch{}
+    try { if (step > 0 && step < 7) localStorage.setItem(STEP_KEY, String(step)); } catch{}
   }, [step]);
 
   const u = (patch) => setProfile(p => ({ ...p, ...patch }));
@@ -1390,8 +1448,8 @@ export default function App() {
     setStep(0);
   };
 
-  if (step === 0) return <StepWelcome onNext={next} hasProgress={(() => { try { return !!localStorage.getItem(STEP_KEY); } catch { return false; }})() } onResume={() => { try { const s = localStorage.getItem(STEP_KEY); if(s) setStep(parseInt(s,10)); } catch{} }} onReset={handleReset} />;
-  if (step === 7) return <ChatView profile={profile} apiKey="" onReset={handleReset} />;
+  if (step === 0) return <StepWelcome onNext={next} hasProgress={(() => { try { return !!localStorage.getItem(STEP_KEY); } catch { return false; }})()}  onResume={() => { try { const s = localStorage.getItem(STEP_KEY); if(s) setStep(parseInt(s,10)); } catch{} }} onReset={handleReset} />;
+  if (step === 7) return <ChatView profile={profile} onReset={handleReset} />;
 
   return (
     <>
@@ -1401,7 +1459,6 @@ export default function App() {
       {step === 4 && <Step4 data={profile} onChange={u} onNext={next} onBack={back} />}
       {step === 5 && <Step5 data={profile} onChange={u} onNext={next} onBack={back} />}
       {step === 6 && <Step6 data={profile} onChange={u} onNext={next} onBack={back} />}
-      
     </>
   );
 }
