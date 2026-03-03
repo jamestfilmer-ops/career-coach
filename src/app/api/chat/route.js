@@ -16,7 +16,7 @@ export async function POST(req) {
       },
       body: JSON.stringify({
         model: "gpt-4o-mini",
-        max_tokens: 1000,
+        max_tokens: 4000,
         messages: [
           ...(system ? [{ role: "system", content: system }] : []),
           ...messages,
