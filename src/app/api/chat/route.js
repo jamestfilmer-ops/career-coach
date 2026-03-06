@@ -1,6 +1,4 @@
 // src/app/api/chat/route.js
-// Proxies chat requests to OpenAI GPT-4o-mini.
-
 import { NextResponse } from "next/server";
 
 export async function POST(req) {
@@ -15,8 +13,8 @@ export async function POST(req) {
         "Authorization": `Bearer ${process.env.OPENAI_API_KEY}`,
       },
       body: JSON.stringify({
-        model: "gpt-4o-mini",
-        max_tokens: 8000,
+        model: "gpt-4o",
+        max_tokens: 12000,
         messages: [
           ...(system ? [{ role: "system", content: system }] : []),
           ...messages,
@@ -30,9 +28,12 @@ export async function POST(req) {
     }
 
     const data = await res.json();
-    const text = data.choices?.[0]?.message?.content || "";
 
-    // Return in Anthropic-compatible shape so the frontend doesn't need changes
+    if (data.choices?.[0]?.finish_reason === "length") {
+      return NextResponse.json({ error: "Response was cut off — hit Try Again, it usually works on the second attempt." }, { status: 500 });
+    }
+
+    const text = data.choices?.[0]?.message?.content || "";
     return NextResponse.json({ content: [{ type: "text", text }] });
   } catch (e) {
     return NextResponse.json({ error: e.message }, { status: 500 });
